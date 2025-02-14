@@ -21,7 +21,7 @@ export const insertCompanySchema = createInsertSchema(companies)
   .omit({ id: true })
   .extend({
     website: z.string().url("Must be a valid URL"),
-    linkedinUrl: z.string().url("Must be a valid LinkedIn URL").includes("linkedin.com", "Must be a LinkedIn URL"),
+    linkedinUrl: z.string().url("Must be a valid LinkedIn URL").regex(/linkedin\.com/, { message: "Must be a LinkedIn URL" }),
     foundedYear: z.number().min(1800).max(new Date().getFullYear()),
     employeeCount: z.number().min(1),
   });

@@ -1,4 +1,6 @@
-import { type Company, type InsertCompany } from "@shared/schema";
+import { companies, type Company, type InsertCompany } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getCompanies(): Promise<Company[]>;
@@ -8,40 +10,40 @@ export interface IStorage {
   deleteCompany(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private companies: Map<number, Company>;
-  private currentId: number;
-
-  constructor() {
-    this.companies = new Map();
-    this.currentId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getCompanies(): Promise<Company[]> {
-    return Array.from(this.companies.values());
+    return await db.select().from(companies);
   }
 
   async getCompany(id: number): Promise<Company | undefined> {
-    return this.companies.get(id);
+    const [company] = await db.select().from(companies).where(eq(companies.id, id));
+    return company;
   }
 
   async createCompany(insertCompany: InsertCompany): Promise<Company> {
-    const id = this.currentId++;
-    const company: Company = { id, ...insertCompany };
-    this.companies.set(id, company);
+    const [company] = await db
+      .insert(companies)
+      .values(insertCompany)
+      .returning();
     return company;
   }
 
   async updateCompany(id: number, company: InsertCompany): Promise<Company | undefined> {
-    if (!this.companies.has(id)) return undefined;
-    const updatedCompany: Company = { id, ...company };
-    this.companies.set(id, updatedCompany);
+    const [updatedCompany] = await db
+      .update(companies)
+      .set(company)
+      .where(eq(companies.id, id))
+      .returning();
     return updatedCompany;
   }
 
   async deleteCompany(id: number): Promise<boolean> {
-    return this.companies.delete(id);
+    const [deletedCompany] = await db
+      .delete(companies)
+      .where(eq(companies.id, id))
+      .returning();
+    return !!deletedCompany;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
