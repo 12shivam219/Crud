@@ -1,6 +1,6 @@
 import { useToast } from "@/hooks/use-toast";
 import { CompanyForm } from "@/components/company-form";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import type { InsertCompany } from "@shared/schema";
 
@@ -11,6 +11,8 @@ export default function NewCompany() {
   const onSubmit = async (data: InsertCompany) => {
     try {
       await apiRequest("POST", "/api/companies", data);
+      // Invalidate the companies query to refetch the list
+      await queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
       toast({
         title: "Success",
         description: "Company created successfully",
