@@ -41,3 +41,5 @@ vite.config.ts.*
 *.log
 *.tar.gz
 .cache
+.vercel
+.env*.local
